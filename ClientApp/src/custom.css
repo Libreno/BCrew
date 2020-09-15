@@ -12,3 +12,18 @@ code {
   background-color: #1b6ec2;
   border-color: #1861ac;
 }
+
+.bc-order-details h4 {
+  margin: 15px 0 15px;
+  text-align: center;
+}
+
+.bc-address-form {
+  display: flex;
+  margin: 15px 0 15px;
+}
+
+.bc-address-form input {
+  min-width: 160px;
+  max-width: 320px;
+}
