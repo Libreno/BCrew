@@ -1,16 +1,18 @@
 ﻿import * as React from 'react';
-import Container from 'react-bootstrap/Container'
+import Container from 'react-bootstrap/Container';
 import { YMaps, Map, YMapsApi, MapState } from 'react-yandex-maps';
 import { connect } from 'react-redux';
-import Form from 'react-bootstrap/Form'
-import Button from 'react-bootstrap/Button'
+import Form from 'react-bootstrap/Form';
+import Button from 'react-bootstrap/Button';
+import axios from 'axios';
 
 interface IState {
   address: string,
   mapState: MapState,
   ymapsApi: YMapsApi | null,
   currentPlacemark: any,
-  currentPlaceName: string
+  currentPlaceName: string,
+  crewsInfo: Array<any>
 }
 
 class OrderDetails extends React.Component<{}, IState> {
@@ -23,7 +25,8 @@ class OrderDetails extends React.Component<{}, IState> {
       mapState: { center: [0, 0], zoom: 10 },
       ymapsApi: null,
       currentPlacemark: null,
-      currentPlaceName: ''
+      currentPlaceName: '',
+      crewsInfo: []
     };
 
     this.findAddress = this.findAddress.bind(this);
@@ -32,7 +35,7 @@ class OrderDetails extends React.Component<{}, IState> {
     this.createPlacemark = this.createPlacemark.bind(this);
     this.fillAddressByCoordinates = this.fillAddressByCoordinates.bind(this);
     this.onMapClick = this.onMapClick.bind(this);
-    this.onDragEnd = this.onDragEnd.bind(this);
+    this.loadCrews = this.loadCrews.bind(this);
     this.map = React.createRef();
   }
 
@@ -50,13 +53,44 @@ class OrderDetails extends React.Component<{}, IState> {
         // адрес не найден
         console.error('адрес не найден');
         return;
-      }
+      };
       let coords = firstGeoObject.geometry.getCoordinates();
-      //this.map.geoObjects.removeAll();
-      this.createPlacemark(coords, address);
+      this.loadCrews(coords, address);
+      this.createPlacemark(coords);
     }).catch((e: any) => {
       console.error(e);
     });
+  }
+
+  loadCrews(coords: Float32Array, address: string) {
+    let request = {
+      source_time: `20200916170000`, // todo
+      addresses: [{
+        address: address,
+        lat: coords[0],
+        lon: coords[1]
+      }]
+    };
+    let component = this;
+    return axios.post('/api/creworder/search', request).then(r => {
+      if (r.data.code !== 0) {
+        console.error(r.data.descr);
+        console.error(r);
+      };
+      component.setState({
+        crewsInfo: r.data.data.crews_info
+      });
+      r.data.data.crews_info.forEach((crewInfo: any) => {
+        // @ts-ignore: this.state.ymapsApi is not null
+        let placemark = new component.state.ymapsApi.Placemark([crewInfo.lat, crewInfo.lon], {
+        }, {
+          preset: 'islands#greenAutoIcon',
+        });
+        this.map.geoObjects.add(placemark);
+      })
+    }).catch(e => {
+      console.error(e);
+    })
   }
 
   onAddressChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -86,64 +120,48 @@ class OrderDetails extends React.Component<{}, IState> {
 
   onMapClick(e: any) {
     var coords = e.get('coords');
-    let placemark = this.createPlacemark(coords, 'поиск...');
-    this.map.setCenter(placemark.geometry.getCoordinates());
-    this.fillAddressByCoordinates(placemark);
+    let placemark = this.createPlacemark(coords);
+    this.fillAddressByCoordinates(placemark).then((address: string) => {
+      this.loadCrews(coords, address);
+    }).catch((e: any) => {
+      console.error(e);
+    });
   }
 
   // Создание метки.
-  createPlacemark(coords: any, text: string) {
+  createPlacemark(coords: Float32Array) {
     let placemark = this.state.currentPlacemark;
     // Если метка уже создана – просто передвигаем ее.
     if (placemark) {
       this.state.currentPlacemark.geometry.setCoordinates(coords);
-      placemark.properties.set({
-        iconCaption: text
-      });
     }
     // Если нет – создаем.
     else {
       // @ts-ignore: this.state.ymapsApi is not null
-      placemark = new this.state.ymapsApi.Placemark(coords, {
-        iconCaption: text
-      }, {
-        preset: 'islands#yellowDotIconWithCaption',
-        iconColor: '#ffc300',
-        draggable: true
+      placemark = new this.state.ymapsApi.Placemark(coords, {}, {
+        preset: 'islands#yellowDotIcon',
       });
       this.map.geoObjects.add(placemark);
       // Слушаем событие окончания перетаскивания на метке.
-      placemark.events.add('dragend', this.onDragEnd);
       this.setState({ currentPlacemark: placemark });
     }
-    this.map.setCenter(coords);
 
     return placemark;
-  }
-
-  onDragEnd() {
-    let placemark = this.state.currentPlacemark;
-    this.fillAddressByCoordinates(placemark);
-    this.map.setCenter(placemark.geometry.getCoordinates());
   }
 
   // Определяем адрес по координатам (обратное геокодирование).
   fillAddressByCoordinates(placemark: any) {
     let coords = placemark.geometry.getCoordinates();
-    placemark.properties.set('iconCaption', 'поиск...');
     let component = this;
     // @ts-ignore: this.state.ymapsApi is not null
-    this.state.ymapsApi.geocode(coords).then(function (res: any) {
+    return this.state.ymapsApi.geocode(coords).then(function (res: any) {
       var firstGeoObject = res.geoObjects.get(0);
       // @ts-ignore: this.state.ymapsApi is not null
       let shortAddress = firstGeoObject.properties.get('name');
-      placemark.properties.set({
-        iconCaption: shortAddress,
-        //balloonContent: firstGeoObject.getAddressLine()
-      });
       component.setState({
         address: shortAddress
       });
+      return shortAddress;
     }).catch((e: any) => {
       console.error(e);
     });
