@@ -21,7 +21,7 @@ namespace BCrew.Controllers
 		[HttpPost]
 		public SearchCrewResponse Search(SearchCrewRequest request) {
 			logger.LogInformation($"Search {JsonSerializer.Serialize(request)}");
-			var rnd = new Random(DateTime.Now.Millisecond);
+			var rnd = new Random();
 			var crewsInfoList = Enumerable.Range(1, rnd.Next(1, 5)).Aggregate(new List<CrewsInfo>(), (v, i) => 
 			{
 				var car = CarInfoRandomGenerator.Next();
@@ -48,7 +48,7 @@ namespace BCrew.Controllers
 				Descr = "OK",
 				Data = new SearchResultData()
 				{
-					CrewsInfo = crewsInfoList.ToArray()
+					CrewsInfo = crewsInfoList.OrderBy(ci => ci.Distance).ToArray()
 				}
 			};
 		}

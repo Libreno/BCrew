@@ -22,7 +22,7 @@ namespace BCrew.Controllers
 		};
 		static string LETTERS = "АВСЕНКМОРТХУ";
 		public static Tuple<string, string, string, string> Next() {
-			var rnd = new Random(DateTime.Now.Millisecond);
+			var rnd = new Random();
 			var car = MODELS[rnd.Next(0, MODELS.Length)];
 			Func<char> rndLetter = () => { 
 				return LETTERS[rnd.Next(0, LETTERS.Length - 1)]; 

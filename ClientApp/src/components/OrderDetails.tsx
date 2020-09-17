@@ -5,6 +5,9 @@ import { connect } from 'react-redux';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import axios from 'axios';
+import { GiCityCar } from 'react-icons/gi'
+import Col from 'react-bootstrap/Col'
+import Row from 'react-bootstrap/Row'
 
 interface IState {
   address: string,
@@ -55,6 +58,7 @@ class OrderDetails extends React.Component<{}, IState> {
         return;
       };
       let coords = firstGeoObject.geometry.getCoordinates();
+      this.map.setCenter(coords);
       this.loadCrews(coords, address);
       this.createPlacemark(coords);
     }).catch((e: any) => {
@@ -67,8 +71,8 @@ class OrderDetails extends React.Component<{}, IState> {
       source_time: `20200916170000`, // todo
       addresses: [{
         address: address,
-        lat: coords[0],
-        lon: coords[1]
+        lon: coords[0],
+        lat: coords[1]
       }]
     };
     let component = this;
@@ -82,7 +86,7 @@ class OrderDetails extends React.Component<{}, IState> {
       });
       r.data.data.crews_info.forEach((crewInfo: any) => {
         // @ts-ignore: this.state.ymapsApi is not null
-        let placemark = new component.state.ymapsApi.Placemark([crewInfo.lat, crewInfo.lon], {
+        let placemark = new component.state.ymapsApi.Placemark([crewInfo.lon, crewInfo.lat], {
         }, {
           preset: 'islands#greenAutoIcon',
         });
@@ -130,22 +134,13 @@ class OrderDetails extends React.Component<{}, IState> {
 
   // Создание метки.
   createPlacemark(coords: Float32Array) {
-    let placemark = this.state.currentPlacemark;
-    // Если метка уже создана – просто передвигаем ее.
-    if (placemark) {
-      this.state.currentPlacemark.geometry.setCoordinates(coords);
-    }
-    // Если нет – создаем.
-    else {
-      // @ts-ignore: this.state.ymapsApi is not null
-      placemark = new this.state.ymapsApi.Placemark(coords, {}, {
-        preset: 'islands#yellowDotIcon',
-      });
-      this.map.geoObjects.add(placemark);
-      // Слушаем событие окончания перетаскивания на метке.
-      this.setState({ currentPlacemark: placemark });
-    }
-
+    this.map.geoObjects.removeAll();
+    // @ts-ignore: this.state.ymapsApi is not null
+    let placemark = new this.state.ymapsApi.Placemark(coords, {}, {
+      preset: 'islands#yellowDotIcon',
+    });
+    this.map.geoObjects.add(placemark);
+    this.setState({ currentPlacemark: placemark });
     return placemark;
   }
 
@@ -169,23 +164,77 @@ class OrderDetails extends React.Component<{}, IState> {
 
   render() {
     return (
-      <Container fluid className="bc-order-details">
-            <h4>Детали заказа</h4>
-            <Form className="bc-address-form" onSubmit={this.findAddress}>
-              <Form.Control as="input" type="text" placeholder="Откуда" onChange={this.onAddressChange} value={this.state.address} />
-              <Button variant="primary" type="submit">
-                Показать
-              </Button>
-            </Form>
-            <YMaps query={{ apikey: '2e91d220-e2a5-4fcc-9e66-3383ab222b17', load: "package.full" }}>
+      <div className="bc-order-details">
+        <h4>Детали заказа</h4>
+        <Container fluid>
+          <Row>
+            <Col className="bc-layout-side-column"></Col>
+            <Col xs={6} className="bc-layout-center-column">
               <div>
-                <Map state={this.state.mapState}
-                  modules={["geolocation", "geocode", "util.requireCenterAndZoom", "geoObject.addon.balloon", "geoObject.addon.hint"]}
-                  onLoad={this.onMapLoad}
-                  instanceRef={ref => (this.map = ref)}/>
+                <Form className="bc-address-form" onSubmit={this.findAddress}>
+                  <Form.Control as="input" type="text" placeholder="Откуда: улица, номер дома" onChange={this.onAddressChange} value={this.state.address} />
+                  <Button variant="primary" type="submit">
+                    Показать
+                  </Button>
+                </Form>
               </div>
-            </YMaps>
-      </Container>
+              <div className="bc-map-with-card-list">
+                <YMaps query={{ apikey: '2e91d220-e2a5-4fcc-9e66-3383ab222b17', load: "package.full" }}>
+                  <Map state={this.state.mapState}
+                    modules={["geolocation", "geocode", "util.requireCenterAndZoom", "geoObject.addon.balloon", "geoObject.addon.hint"]}
+                    onLoad={this.onMapLoad}
+                    instanceRef={ref => (this.map = ref)}
+                    width="100%"
+                    height="500px" // todo: set persentage (persentage don't work for now)
+                  />
+                </YMaps>
+                <div className="bc-crew-list">
+                  {this.state.crewsInfo.map((ci) => {
+                    return <div key={ci.crew_id} className="bc-crew-list-card">
+                      <GiCityCar size="100" />
+                      <div>
+                        <div>
+                          {ci.car_mark} {ci.car_model}
+                        </div>
+                        <div>
+                          {ci.car_color}
+                        </div>
+                      </div>
+                      <div>
+                        {ci.distance}&nbsp;м.
+                      </div>
+                    </div>
+                  })}
+                </div>
+              </div>
+              {this.state.crewsInfo[0] &&
+              <div className="bc-crew-nearest">
+                <div>
+                  Подходящий экипаж:
+                </div>
+                <div className="bc-crew-card">
+                  <GiCityCar size="100" />
+                  <div>
+                    <div>
+                      {this.state.crewsInfo[0].car_mark} {this.state.crewsInfo[0].car_model}
+                    </div>
+                    <div>
+                      {this.state.crewsInfo[0].car_color}
+                    </div>
+                    <div>
+                      {this.state.crewsInfo[0].car_number}
+                    </div>
+                  </div>
+                </div>
+                <Button variant="primary" type="submit">
+                  Заказать
+                </Button>
+              </div>}
+            </Col>
+            <Col className="bc-layout-side-column"></Col>
+          </Row>
+        </Container>
+      </div>
     )
   }
 }

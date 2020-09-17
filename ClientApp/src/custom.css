@@ -23,7 +23,33 @@ code {
   margin: 15px 0 15px;
 }
 
-.bc-address-form input {
-  min-width: 160px;
-  max-width: 320px;
+.bc-crew-card {
+  display: flex;
+}
+
+.bc-crew-nearest {
+  display: flex;
+}
+
+.bc-order-details .row {
+  margin-left: 0;
+}
+
+.bc-map-with-card-list {
+  display: flex;
+}
+
+.bc-crew-list-card {
+  display: flex;
+  border: solid;
+  border-width: .2rem;
+  border-radius: 8px;
+  border-color: gray;
+}
+
+.bc-crew-list {
+  border: solid;
+  border-color: gray;
+  border-width: .2rem;
+  width: 30%;
 }
