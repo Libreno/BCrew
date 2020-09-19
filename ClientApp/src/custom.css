@@ -1,4 +1,9 @@
 /* Provide sufficient contrast against white background */
+@font-face{
+  font-family: "Sergoe Print";
+  src: url('resources/8538.ttf')
+}
+
 a {
   color: #0366d6;
 }
@@ -13,6 +18,27 @@ code {
   border-color: #1861ac;
 }
 
+.bc-overlay > div {
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+  .bc-overlay > div:not(.bc-order-details) {
+    color: rgba(27, 110, 194, 1);
+  }
+
+.bc-overlay circle {
+  stroke: rgb(27, 110, 194) !important;
+}
+
+.bc-overlay {
+  height: 800px;
+  font-family: 'Sergoe Print';
+}
+
+.bc-order-details {
+  font-family: 'Sergoe Print';
+}
+
 .bc-order-details h4 {
   margin: 15px 0 15px;
   text-align: center;
@@ -23,33 +49,98 @@ code {
   margin: 15px 0 15px;
 }
 
-.bc-crew-card {
-  display: flex;
-}
-
-.bc-crew-nearest {
-  display: flex;
-}
-
 .bc-order-details .row {
   margin-left: 0;
 }
 
 .bc-map-with-card-list {
   display: flex;
+  border: solid;
+  border-width: .05rem;
+  /*border-radius: 8px;*/
+  border-color: gray;
+}
+
+.bc-map {
+  width: 70%;
 }
 
 .bc-crew-list-card {
-  display: flex;
+  display: grid;
+  grid-template-columns: 20px 2fr 1fr;
   border: solid;
-  border-width: .2rem;
-  border-radius: 8px;
+  border-width: .05rem;
+  /*border-radius: 8px;*/
   border-color: gray;
 }
 
+.bc-car-mark-model {
+  font-weight: bold;
+  align-self: center;
+}
+
+.bc-crew-descr {
+  margin-left: 5px;
+}
+
+.bc-distance {
+  text-align: end;
+  align-self: end;
+  width: 100%;
+  font-size: 14px;
+  font-style: italic;
+  padding: 5px;
+}
+
 .bc-crew-list {
-  border: solid;
-  border-color: gray;
-  border-width: .2rem;
   width: 30%;
+  border-left: solid;
+  border-color: gray;
+  border-width: .05rem;
+}
+
+.bc-crew-icon {
+  color: #43e457;
+  margin: 5px;
+}
+
+.bc-crew-nearest {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.bc-crew-nearest-label {
+  align-self: center;
+}
+
+.bc-crew-card {
+  display: flex;
+  border: solid;
+  border-width: .05rem;
+  padding-right: 10px;
+  margin: 10px 0 10px 10px;
+}
+
+.bc-crew-card svg {
+  margin: 10px 10px 0 10px;
+  color: gray;
+}
+
+.bc-crew-card-car-info {
+  align-self: center;
+}
+
+.bc-car-number {
+  border: solid;
+  border-width: .05rem;
+  text-align: center;
+  display: table;
+  padding: 3px;
+  margin-top: 5px;
+}
+
+.bc-crew-order-bottom {
+  display: table;
+  margin: 0 auto;
 }
