@@ -1,7 +1,7 @@
 /* Provide sufficient contrast against white background */
-@font-face{
-  font-family: "Sergoe Print";
-  src: url('resources/8538.ttf')
+@font-face {
+  font-family: "Segoe Print";
+  src: url('resources/SegoePrint.ttf')
 }
 
 a {
@@ -32,11 +32,11 @@ code {
 
 .bc-overlay {
   height: 800px;
-  font-family: 'Sergoe Print';
+  font-family: 'Segoe Print';
 }
 
 .bc-order-details {
-  font-family: 'Sergoe Print';
+  font-family: 'Segoe Print';
 }
 
 .bc-order-details h4 {

@@ -3,10 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace BCrew.Controllers
 {
-	public class SearchCrewResponse {
-		public int Code { get; set; }
-		public string Descr { get; set; }
-		public SearchResultData Data {get;set;}
+	public class SearchCrewResponse: BaseResponse<SearchResultData> {
 	}
 
 	public class SearchResultData
