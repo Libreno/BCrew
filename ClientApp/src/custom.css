@@ -45,8 +45,19 @@ code {
 }
 
 .bc-address-form {
-  display: flex;
   margin: 15px 0 15px;
+}
+
+.bc-address-form label{
+  margin: 7px 10px 0 0;
+}
+
+.bc-feedback {
+  margin-bottom: -23px;
+}
+
+.bc-find-button {
+  text-align: end;
 }
 
 .bc-order-details .row {
@@ -57,7 +68,6 @@ code {
   display: flex;
   border: solid;
   border-width: .05rem;
-  /*border-radius: 8px;*/
   border-color: gray;
 }
 
@@ -70,7 +80,6 @@ code {
   grid-template-columns: 20px 2fr 1fr;
   border: solid;
   border-width: .05rem;
-  /*border-radius: 8px;*/
   border-color: gray;
 }
 
@@ -143,4 +152,8 @@ code {
 .bc-crew-order-bottom {
   display: table;
   margin: 0 auto;
+}
+
+.bc-modal {
+  font-family: 'Segoe Print';
 }

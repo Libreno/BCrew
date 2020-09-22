@@ -9,5 +9,6 @@ export interface IState {
   showSpinner: boolean;
   error: string,
   orderId: number | null,
-  showOrderId: boolean
+  showOrderId: boolean,
+  formValidated: boolean
 }
