@@ -10,22 +10,21 @@ import { BsGeoAlt } from 'react-icons/bs'
 import { GiCityCar } from 'react-icons/gi'
 import LoadingOverlay from 'react-loading-overlay';
 import { connect } from 'react-redux';
-import { YMaps, Map, YMapsApi } from 'react-yandex-maps';
+import { YMaps, Map, YMapsApi, Placemark, MapState } from 'react-yandex-maps';
 import { IState } from './IState';
 import ModalMessage from './ModalMessage';
 
 class OrderDetails extends React.Component<{}, IState> {
-  map: React.Ref<any> | any;
   addressInput: React.Ref<any> | any;
 
   constructor(props: {}) {
     super(props);
     this.state = {
       address: '',
-      mapState: { center: [0, 0], zoom: 10 },
+      bounds: [][0],
+      mapState: { center: [0, 0], zoom: 15 } as MapState,
       ymapsApi: null,
-      currentPlacemark: null,
-      currentPlaceName: '',
+      currentPlaceInfo: null,
       crewsInfo: [],
       showSpinner: true,
       error: '',
@@ -37,7 +36,6 @@ class OrderDetails extends React.Component<{}, IState> {
     this.findAddress = this.findAddress.bind(this);
     this.onAddressChange = this.onAddressChange.bind(this);
     this.onMapLoad = this.onMapLoad.bind(this);
-    this.createPlacemark = this.createPlacemark.bind(this);
     this.fillAddressByCoordinates = this.fillAddressByCoordinates.bind(this);
     this.onMapClick = this.onMapClick.bind(this);
     this.loadCrews = this.loadCrews.bind(this);
@@ -45,37 +43,62 @@ class OrderDetails extends React.Component<{}, IState> {
     this.onCloseOrderMessage = this.onCloseOrderMessage.bind(this);
     this.resetForm = this.resetForm.bind(this);
 
-    this.map = React.createRef();
     this.addressInput = React.createRef();
   }
 
   findAddress(event: React.FormEvent<any>) {
     event.preventDefault();
     let address = this.state.address;
+    if (address === "") {
+      this.addressInput.setCustomValidity("Адрес не найден.");
+      this.setState({
+        formValidated: true,
+        error: ''
+      });
+      return;
+    }
     this.setState({
       showSpinner: true
     });
-    let addressToFind = `${this.state.currentPlaceName}, ${address}`;
     // @ts-ignore: this.state.ymapsApi is not null
-    this.state.ymapsApi.geocode(addressToFind).then((res: any) => {
+    this.state.ymapsApi.geocode(address, {
+      boundedBy: this.state.bounds,
+      strictBounds: true,
+      results: 1}
+    ).then((res: any) => {
       var firstGeoObject = res.geoObjects.get(0);
       if (firstGeoObject === undefined || firstGeoObject.properties.get('metaDataProperty.GeocoderMetaData').kind !== 'house') {
         // адрес не найден
-        let error = 'адрес ${addressToFind} не найден';
+        let error = `Адрес '${address}' не найден.`;
         this.addressInput.setCustomValidity(error);
-        this.setState({ formValidated: true, error: '' });
+        this.setState({
+          formValidated: true,
+          error: ''
+        });
         return;
       };
       let shortAddress = firstGeoObject.properties.get('name');
-      this.setState({ formValidated: true, error: '', address: shortAddress });
       this.addressInput.setCustomValidity('');
       let coords = firstGeoObject.geometry.getCoordinates();
-      this.map.setCenter(coords);
+      this.setState(prevState => {
+        return {
+          ...prevState,
+          formValidated: true,
+          error: '',
+          address: shortAddress,
+          currentPlaceInfo: {
+            addressFound: true,
+            coordinates: coords
+          },
+          mapState: {
+            center: coords,
+            zoom: prevState.mapState.zoom
+          } as MapState
+        }});
       this.loadCrews(coords, address);
-      this.createPlacemark(coords, false);
     }).catch((e: any) => {
       this.setState({
-        error: e.toString()
+        error: JSON.stringify(e)
       });
     }).always(() => {
       this.setState({
@@ -97,18 +120,10 @@ class OrderDetails extends React.Component<{}, IState> {
     return axios.post('/api/creworder/search', request).then(r => {
       component.setState({
         crewsInfo: r.data.data.crews_info
-      });
-      r.data.data.crews_info.forEach((crewInfo: any) => {
-        // @ts-ignore: this.state.ymapsApi is not null
-        let placemark = new component.state.ymapsApi.Placemark([crewInfo.lon, crewInfo.lat], {
-        }, {
-          preset: 'islands#greenAutoIcon',
-        });
-        this.map.geoObjects.add(placemark);
-      })
+      });      
     }).catch(e => {
       component.setState({
-        error: e.toString()
+        error: JSON.stringify(e)
       });
     })
   }
@@ -138,16 +153,21 @@ class OrderDetails extends React.Component<{}, IState> {
         });
         return;
       }
-
+      let boundedBy = res.geoObjects.get(0).properties.get('boundedBy');
+      console.log(boundedBy);
+      component.setState(prevState => {
+        return {
+          ...prevState,
+          ymapsApi: ymapsApi,
+          bounds: boundedBy,
+          mapState: {
+            center: res.geoObjects.position,
+            zoom: prevState.mapState.zoom,
+          } as MapState
+        }});
+    }).catch((e: any) => {
       component.setState({
-        mapState: { center: res.geoObjects.position, zoom: 15 },
-        ymapsApi: ymapsApi,
-        currentPlaceName: currentPlaceName
-      });
-      component.map.events.add('click', component.onMapClick);
-    }).catch((er: any) => {
-      component.setState({
-        error: er.toString()
+        error: JSON.stringify(e)
       });
     }).always(() => {
       component.setState({
@@ -164,35 +184,24 @@ class OrderDetails extends React.Component<{}, IState> {
       error: ''
     });
     this.fillAddressByCoordinates(coords).then((address: string) => {
-      if (address === "") {
-        this.createPlacemark(coords, true);
-      } else {
-        this.createPlacemark(coords, false);
+      if (address !== "") {
         this.loadCrews(coords, address);
       }
+      this.setState({
+        currentPlaceInfo: {
+          addressFound: address !== "",
+          coordinates: coords
+        }
+      });
     }).catch((e: any) => {
       this.setState({
-        error: e.toString()
+        error: JSON.stringify(e)
       });
     }).always(() => {
       this.setState({
         showSpinner: false
       });
     })
-  }
-
-  // Создание метки.
-  createPlacemark(coords: Float32Array, addressNotFound: boolean) {
-    this.map.geoObjects.removeAll();
-    // @ts-ignore: this.state.ymapsApi is not null
-    let placemark = new this.state.ymapsApi.Placemark(coords, {
-      iconContent: addressNotFound ? 'Адрес не найден' : null,
-    }, {
-      preset: addressNotFound ? 'islands#redStretchyIcon' : 'islands#yellowDotIcon',
-    });
-    this.map.geoObjects.add(placemark);
-    this.setState({ currentPlacemark: placemark });
-    return placemark;
   }
 
   // Определяем адрес по координатам (обратное геокодирование).
@@ -234,7 +243,7 @@ class OrderDetails extends React.Component<{}, IState> {
       });
     }).catch(e => {
       this.setState({
-        error: e.toString()
+        error: JSON.stringify(e)
       });
     }).finally(() => {
       this.setState({
@@ -251,17 +260,16 @@ class OrderDetails extends React.Component<{}, IState> {
       error: '',
       address: ''
     });
-    this.addressInput.setCustomValidity('');
 
     this.resetForm();
   }
 
   resetForm() {
     this.setState({
-      currentPlacemark: null,
+      currentPlaceInfo: null,
       crewsInfo: []
     });
-    this.map.geoObjects.removeAll();
+    this.addressInput.setCustomValidity('');
   }
 
   render() {
@@ -311,12 +319,33 @@ class OrderDetails extends React.Component<{}, IState> {
               <div className="bc-map-with-card-list">
                 <YMaps query={{ apikey: '2e91d220-e2a5-4fcc-9e66-3383ab222b17', load: "package.full" }} className="bc-map">
                   <Map state={this.state.mapState}
-                    modules={["geolocation", "geocode", "util.requireCenterAndZoom", "geoObject.addon.balloon", "geoObject.addon.hint"]}
                     onLoad={this.onMapLoad}
-                    instanceRef={ref => (this.map = ref)}
+                    onClick={this.onMapClick}
                     width="100%"
-                    height="500px" // todo: set persentage (it disables YMaps component for now)
-                  />
+                    height="500px"
+                  >
+                    {this.state.currentPlaceInfo &&
+                      <Placemark key="point"
+                        geometry={this.state.currentPlaceInfo.coordinates}
+                        options={{ preset: this.state.currentPlaceInfo.addressFound ? 'islands#yellowDotIcon' : 'islands#redStretchyIcon' }}
+                        properties={{ iconContent: this.state.currentPlaceInfo.addressFound ? null : 'Адрес не найден' }} />
+                    }
+                    {this.state.crewsInfo.map(crewInfo =>
+                      <Placemark key={crewInfo.crew_id}
+                        geometry={[crewInfo.lon, crewInfo.lat]}
+                        options={{ preset: 'islands#greenAutoIcon' }} />
+                    )}
+                    {this.state.mapState.bounds &&
+                      <Placemark key="bound1"
+                        geometry={this.state.mapState.bounds[0]}
+                        options={{ preset: 'islands#whiteIcon' }} />
+                    }
+                    {this.state.mapState.bounds &&
+                      <Placemark key="bound2"
+                        geometry={this.state.mapState.bounds[1]}
+                        options={{ preset: 'islands#whiteIcon' }} />
+                    }
+                  </Map>
                 </YMaps>
                 <div className="bc-crew-list">
                   {this.state.crewsInfo.map((ci) => {
@@ -327,7 +356,7 @@ class OrderDetails extends React.Component<{}, IState> {
                         </div>
                         <div className="bc-crew-descr">
                           <div className="bc-car-mark-model">
-                            {ci.car_mark}&nbsp;{ci.car_model}
+                            {ci.car_mark} {ci.car_model}
                           </div>
                           <div>
                             {ci.car_color}
