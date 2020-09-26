@@ -5,13 +5,13 @@ namespace BCrew.Controllers
 	public class CarInfoRandomGenerator
 	{
 		static Tuple<string, string>[] MODELS = new[] { 
-			new Tuple<string, string>("Chevrolet", "Lacetti"),
-			new Tuple<string, string>("Chevrolet", "Tahoe"),
-			new Tuple<string, string>("Kia", "Rio"),
-			new Tuple<string, string>("Kia", "Sportage"),
-			new Tuple<string, string>("Hyndai", "Solaris"),
-			new Tuple<string, string>("Hyndai", "Elantra"),
-			new Tuple<string, string>("Nissan", "Micra")
+			new Tuple<string, string>("Oriolus", "Oriolus"),
+			new Tuple<string, string>("Oriolus", "Isabellae"),
+			new Tuple<string, string>("Ursus", "Arctos"),
+			new Tuple<string, string>("Ursus", "Middendorffi"),
+			new Tuple<string, string>("Papilio", "Machaon"),
+			new Tuple<string, string>("Papilio", "Zalmoxis"),
+			new Tuple<string, string>("Pholidoptera", "Pustulipes")
 		};
 		static string[] COLORS = new[] {
 			"синий",
