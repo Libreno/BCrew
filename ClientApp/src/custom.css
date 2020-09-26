@@ -22,16 +22,16 @@ code {
   background-color: rgba(255, 255, 255, 0.9);
 }
 
-  .bc-overlay > div:not(.bc-order-details) {
-    color: rgba(27, 110, 194, 1);
-  }
+.bc-overlay > div:not(.bc-order-details) {
+  color: rgba(27, 110, 194, 1);
+}
 
 .bc-overlay circle {
   stroke: rgb(27, 110, 194) !important;
 }
 
 .bc-overlay {
-  height: 800px;
+  height: 900px;
   font-family: 'Segoe Print';
 }
 

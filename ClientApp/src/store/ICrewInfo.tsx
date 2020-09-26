@@ -1,5 +1,5 @@
 ﻿
-export interface ICrewInfo {
+export default interface ICrewInfo {
   crew_id: number;
   car_mark: string;
   car_model: string;
