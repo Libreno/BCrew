@@ -56,7 +56,8 @@ export const actionCreators = {
       dispatch({ type: 'RECEIVE_HOUSE_BY_ADDRESS', address: shortAddress, coordinates: coords, addressFound: true, error: '' });
       loadCrews(shortAddress, coords, dispatch);
     }).catch((e: any) => {
-      dispatch({ type: 'RECEIVE_HOUSE_BY_ADDRESS', address: address, error: JSON.stringify(e), addressFound: false, coordinates: [] });
+      console.error(e);
+      dispatch({ type: 'RECEIVE_HOUSE_BY_ADDRESS', address: address, error: e.toString(), addressFound: false, coordinates: [] });
     });
   },
 
@@ -74,7 +75,8 @@ export const actionCreators = {
       let boundedBy = res.geoObjects.get(0).properties.get('boundedBy');
       dispatch({ type: 'RECEIVE_CURRENT_LOCATION', error: '', boundedBy: boundedBy, coordinates: res.geoObjects.position });
     }).catch((e: any) => {
-      dispatch({ type: 'RECEIVE_CURRENT_LOCATION', error: JSON.stringify(e), boundedBy: [][0], coordinates: [] });
+      console.error(e);
+      dispatch({ type: 'RECEIVE_CURRENT_LOCATION', error: e.toString(), boundedBy: [][0], coordinates: [] });
     });
   },
 
@@ -94,7 +96,8 @@ export const actionCreators = {
       };
       dispatch({ type: 'RECEIVE_HOUSE_BY_COORDINATES', address: address, addressFound: address !== '', coordinates: coords, error: '' });
     }).catch((e: any) => {
-      dispatch({ type: 'RECEIVE_HOUSE_BY_COORDINATES', address: '', addressFound: false, coordinates: coords, error: JSON.stringify(e) });
+      console.error(e);
+      dispatch({ type: 'RECEIVE_HOUSE_BY_COORDINATES', address: '', addressFound: false, coordinates: coords, error: e.toString() });
     });
   },
 
@@ -102,7 +105,7 @@ export const actionCreators = {
     dispatch({ type: 'REQUEST_MAKE_ORDER' });
     const appState = getState();
     let request = {
-      source_time: '20200921100955', // value not used
+      source_time: getDateString(),
       addresses: [{
         address: appState.orderDetails.address,
         lat: appState.orderDetails.crewsInfo[0].lat,
@@ -113,7 +116,8 @@ export const actionCreators = {
     axios.post('/api/creworder/make', request).then(r => {
       dispatch({ type: 'RECEIVE_MAKE_ORDER', error: '', orderId: r.data.data.order_id });
     }).catch(e => {
-      dispatch({ type: 'RECEIVE_MAKE_ORDER', error: JSON.stringify(e), orderId: 0 });
+      console.error(e);
+      dispatch({ type: 'RECEIVE_MAKE_ORDER', error: e.toString(), orderId: 0 });
     })
   },
 
@@ -124,7 +128,7 @@ export const actionCreators = {
 
 const loadCrews = (address: string, coords: number[], dispatch: any) => {
   let request = {
-    source_time: `20200916170000`, // value not used
+    source_time: getDateString(),
     addresses: [{
       address: address,
       lon: coords[0],
@@ -134,6 +138,23 @@ const loadCrews = (address: string, coords: number[], dispatch: any) => {
   axios.post('/api/creworder/search', request).then(r => {
     dispatch({ type: 'RECEIVE_CREWS', crewsInfo: r.data.data.crews_info, error: '' })
   }).catch(e => {
-    dispatch({ type: 'RECEIVE_CREWS', crewsInfo: [], error: JSON.stringify(e) })
+    console.error(e);
+    dispatch({ type: 'RECEIVE_CREWS', crewsInfo: [], error: e.toString() })
   })
+}
+
+const getDateString = (): string => {
+  let date = new Date();
+  let y = date.getFullYear();
+  let m = date.getMonth() + 1;
+  let d = date.getDate();
+  let h = date.getHours();
+  let min = date.getMinutes();
+  let s = date.getSeconds();
+
+  const format = (i: number): string => {
+    return ((i < 10) ? '0' + i : i).toString();
+  }
+
+  return y.toString() + format(m) + format(d) + format(h) + format(min) + format(s);
 }
