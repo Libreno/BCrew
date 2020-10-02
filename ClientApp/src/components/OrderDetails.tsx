@@ -19,7 +19,7 @@ type OrderDetailsProps = OrderDetailsState & typeof OrderDetailsStore.actionCrea
 
 class OrderDetails extends React.PureComponent<OrderDetailsProps> {
   addressInput: React.Ref<any> | any;
-  yMapsAPI: any;
+  yMapsAPI: YMapsApi | undefined;
 
   constructor(props: OrderDetailsProps) {
     super(props);
@@ -47,8 +47,8 @@ class OrderDetails extends React.PureComponent<OrderDetailsProps> {
     }
   }
 
-  onMapClick(e: any) {
-    var coords = e.get('coords');
+  onMapClick(e: { get: (s:string) => number[] }) {
+    const coords = e.get('coords');
     this.props.findByCoordinates(this.yMapsAPI, coords);
   }
 

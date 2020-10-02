@@ -3,7 +3,13 @@ import { connect } from 'react-redux';
 import Modal from 'react-bootstrap/Modal'
 import Button from 'react-bootstrap/Button';
 
-const ModalMessage = ({ show, orderId, onHide }: any) => (
+interface IModalMessageProps{
+  show: boolean;
+  orderId: number;
+  onHide: () => void;
+}
+
+const ModalMessage = ({ show, orderId, onHide }: IModalMessageProps) => (
   <Modal
     show={show}
     size="sm"
