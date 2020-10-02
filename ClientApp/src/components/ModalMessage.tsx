@@ -1,5 +1,4 @@
 ﻿import * as React from 'react';
-import { connect } from 'react-redux';
 import Modal from 'react-bootstrap/Modal'
 import Button from 'react-bootstrap/Button';
 
@@ -26,4 +25,4 @@ const ModalMessage = ({ show, orderId, onHide }: IModalMessageProps) => (
   </Modal>
 );
 
-export default connect()(ModalMessage);
+export default ModalMessage;
