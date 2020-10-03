@@ -132,7 +132,7 @@ class OrderDetails extends React.PureComponent<OrderDetailsProps> {
                         </div>
                         <div className="bc-distance">
                           {ci.distance}&nbsp;м.
-                    </div>
+                        </div>
                       </div>
                     )
                   })}
@@ -143,7 +143,7 @@ class OrderDetails extends React.PureComponent<OrderDetailsProps> {
                   <div className="bc-crew-nearest">
                     <div className="bc-crew-nearest-label">
                       Подходящий экипаж:
-                  </div>
+                    </div>
                     <div className="bc-crew-card">
                       <GiCityCar size="100" />
                       <div className="bc-crew-card-car-info">
@@ -162,8 +162,7 @@ class OrderDetails extends React.PureComponent<OrderDetailsProps> {
                   <div>
                     <Button variant="primary" size="lg" block onClick={this.props.makeOrder}>Заказать</Button>
                   </div>
-                </div>
-                )}
+                </div>)}
             </Col>
             <Col className="bc-layout-side-column"></Col>
           </Row>

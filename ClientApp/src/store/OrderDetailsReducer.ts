@@ -1,7 +1,7 @@
 import { Action, Reducer } from 'redux';
 import { MapState } from 'react-yandex-maps';
 import OrderDetailsState from './OrderDetailsState';
-import { KnownAction } from './OrderDetailsStore';
+import { KnownAction } from './KnownAction';
 
 const unloadedState: OrderDetailsState = {
   bounds: [][0],

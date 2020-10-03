@@ -1,42 +1,29 @@
 import axios from 'axios';
 import { AppThunkAction } from '.';
-
-export interface RequestHouseByAddressAction { type: 'REQUEST_HOUSE_BY_ADDRESS' };
-export interface ReceiveHouseByAddressAction { type: 'RECEIVE_HOUSE_BY_ADDRESS', address: string, coordinates: number[], error: string, addressFound: boolean };
-export interface ReceiveFoundHouseByCoordinatesAction { type: 'RECEIVE_FOUND_HOUSE_BY_COORDINATES', address: string };
-export interface ReceiveNotFoundHouseByCoordinatesAction { type: 'RECEIVE_NOT_FOUND_HOUSE_BY_COORDINATES', address: string, error: string };
-export interface ReceiveCurrentLocationAction { type: 'RECEIVE_CURRENT_LOCATION', coordinates: number[], error: string, boundedBy: number[][] };
-export interface ChangeAddressAction { type: 'CHANGE_ADDRESS', address: string };
-export interface RequestHouseByCoordinatesAction { type: 'REQUEST_HOUSE_BY_COORDINATES' };
-export interface ReceiveHouseByCoordinatesAction { type: 'RECEIVE_HOUSE_BY_COORDINATES', coordinates: number[], address: string, error: string, addressFound: boolean };
-export interface ReceiveCrewsAction { type: 'RECEIVE_CREWS', crewsInfo: [], error: string };
-export interface RequestMakeOrderAction { type: 'REQUEST_MAKE_ORDER' };
-export interface ReceiveMakeOrderAction { type: 'RECEIVE_MAKE_ORDER', orderId: number, error: string };
-export interface CloseOrderMessageAction { type: 'CLOSE_ORDER_MESSAGE' };
-
-export type KnownAction = RequestHouseByAddressAction |
-  ReceiveHouseByAddressAction |
-  ReceiveFoundHouseByCoordinatesAction |
-  ReceiveNotFoundHouseByCoordinatesAction |
-  ReceiveCurrentLocationAction |
-  ChangeAddressAction |
-  RequestHouseByCoordinatesAction |
-  ReceiveHouseByCoordinatesAction |
-  ReceiveCrewsAction |
-  RequestMakeOrderAction |
-  ReceiveMakeOrderAction |
-  CloseOrderMessageAction;
+import { KnownAction } from './KnownAction';
 
 export const actionCreators = {
   findByAddress: (yMapsApi: any, address: string): AppThunkAction<KnownAction> => (dispatch, getState) => {
     const appState = getState();
     if (!appState || !appState.orderDetails || !yMapsApi) {
-      dispatch({ type: 'RECEIVE_HOUSE_BY_ADDRESS', address: '', error: 'No state or YMapsAPI did not initialize.', addressFound: false, coordinates: [] });
+      dispatch({
+        type: 'RECEIVE_HOUSE_BY_ADDRESS',
+        address: '',
+        error: 'No state or YMapsAPI did not initialize.',
+        addressFound: false,
+        coordinates: []
+      });
       return;
     };
 
     if (address === "") {
-      dispatch({ type: 'RECEIVE_HOUSE_BY_ADDRESS', address: '', error: '', addressFound: false, coordinates: [] });
+      dispatch({
+        type: 'RECEIVE_HOUSE_BY_ADDRESS',
+        address: '',
+        error: '',
+        addressFound: false,
+        coordinates: []
+      });
       return;
     }
 
@@ -46,18 +33,36 @@ export const actionCreators = {
       strictBounds: true,
       results: 1
     }).then((res: any) => {
-      var firstGeoObject = res.geoObjects.get(0);
+      const firstGeoObject = res.geoObjects.get(0);
       if (firstGeoObject === undefined || firstGeoObject.properties.get('metaDataProperty.GeocoderMetaData').kind !== 'house') {
-        dispatch({ type: 'RECEIVE_HOUSE_BY_ADDRESS', address: address, error: '', addressFound: false, coordinates: [] });
+        dispatch({
+          type: 'RECEIVE_HOUSE_BY_ADDRESS',
+          address: address,
+          error: '',
+          addressFound: false,
+          coordinates: []
+        });
         return;
       };
-      let shortAddress = firstGeoObject.properties.get('name');
-      let coords = firstGeoObject.geometry.getCoordinates();
-      dispatch({ type: 'RECEIVE_HOUSE_BY_ADDRESS', address: shortAddress, coordinates: coords, addressFound: true, error: '' });
+      const shortAddress = firstGeoObject.properties.get('name');
+      const coords = firstGeoObject.geometry.getCoordinates();
+      dispatch({
+        type: 'RECEIVE_HOUSE_BY_ADDRESS',
+        address: shortAddress,
+        coordinates: coords,
+        addressFound: true,
+        error: ''
+      });
       loadCrews(shortAddress, coords, dispatch);
     }).catch((e: any) => {
       console.error(e);
-      dispatch({ type: 'RECEIVE_HOUSE_BY_ADDRESS', address: address, error: e.toString(), addressFound: false, coordinates: [] });
+      dispatch({
+        type: 'RECEIVE_HOUSE_BY_ADDRESS',
+        address: address,
+        error: e.toString(),
+        addressFound: false,
+        coordinates: []
+      });
     });
   },
 
@@ -66,45 +71,75 @@ export const actionCreators = {
       provider: 'browser',
       mapStateAutoApply: true
     }).then(function (res: any) {
-      let currentPlaceName = res.geoObjects.get(0).getLocalities();
+      const currentPlaceName = res.geoObjects.get(0).getLocalities();
       if (currentPlaceName === "") {
-        let error = 'The current place was not detected, the component wouldn\'t work';
-        dispatch({ type: 'RECEIVE_CURRENT_LOCATION', error: error, boundedBy: [][0], coordinates: [] });
+        const error = 'The current place was not detected, the component wouldn\'t work';
+        dispatch({
+          type: 'RECEIVE_CURRENT_LOCATION',
+          error: error,
+          boundedBy: [][0],
+          coordinates: []
+        });
         return;
       }
-      let boundedBy = res.geoObjects.get(0).properties.get('boundedBy');
-      dispatch({ type: 'RECEIVE_CURRENT_LOCATION', error: '', boundedBy: boundedBy, coordinates: res.geoObjects.position });
+      const boundedBy = res.geoObjects.get(0).properties.get('boundedBy');
+      dispatch({
+        type: 'RECEIVE_CURRENT_LOCATION',
+        error: '',
+        boundedBy: boundedBy,
+        coordinates: res.geoObjects.position
+      });
     }).catch((e: any) => {
       console.error(e);
-      dispatch({ type: 'RECEIVE_CURRENT_LOCATION', error: e.toString(), boundedBy: [][0], coordinates: [] });
+      dispatch({
+        type: 'RECEIVE_CURRENT_LOCATION',
+        error: e.toString(),
+        boundedBy: [][0],
+        coordinates: []
+      });
     });
   },
 
   changeAddress: (address: string): AppThunkAction<KnownAction> => (dispatch, getState) => {
-    dispatch({ type: 'CHANGE_ADDRESS', address: address });
+    dispatch({
+      type: 'CHANGE_ADDRESS',
+      address: address
+    });
   },
 
   findByCoordinates: (yMapsApi: any, coords: number[]): AppThunkAction<KnownAction> => (dispatch, getState) => {
     dispatch({ type: 'REQUEST_HOUSE_BY_COORDINATES' });
     yMapsApi.geocode(coords).then(function (res: any) {
-      var firstGeoObject = res.geoObjects.get(0);
-      let address = firstGeoObject.properties.get('metaDataProperty.GeocoderMetaData').kind === "house"
+      const firstGeoObject = res.geoObjects.get(0);
+      const address = firstGeoObject.properties.get('metaDataProperty.GeocoderMetaData').kind === "house"
         ? firstGeoObject.properties.get('name')
         : "";
       if (address !== "") {
         loadCrews(address, coords, dispatch);
       };
-      dispatch({ type: 'RECEIVE_HOUSE_BY_COORDINATES', address: address, addressFound: address !== '', coordinates: coords, error: '' });
+      dispatch({
+        type: 'RECEIVE_HOUSE_BY_COORDINATES',
+        address: address,
+        addressFound: address !== '',
+        coordinates: coords,
+        error: ''
+      });
     }).catch((e: any) => {
       console.error(e);
-      dispatch({ type: 'RECEIVE_HOUSE_BY_COORDINATES', address: '', addressFound: false, coordinates: coords, error: e.toString() });
+      dispatch({
+        type: 'RECEIVE_HOUSE_BY_COORDINATES',
+        address: '',
+        addressFound: false,
+        coordinates: coords,
+        error: e.toString()
+      });
     });
   },
 
   makeOrder: (): AppThunkAction<KnownAction> => (dispatch, getState) => {
     dispatch({ type: 'REQUEST_MAKE_ORDER' });
     const appState = getState();
-    let request = {
+    const request = {
       source_time: getDateString(),
       addresses: [{
         address: appState.orderDetails.address,
@@ -114,10 +149,18 @@ export const actionCreators = {
       crew_id: appState.orderDetails.crewsInfo[0].crew_id
     };
     axios.post('/api/creworder/make', request).then(r => {
-      dispatch({ type: 'RECEIVE_MAKE_ORDER', error: '', orderId: r.data.data.order_id });
+      dispatch({
+        type: 'RECEIVE_MAKE_ORDER',
+        error: '',
+        orderId: r.data.data.order_id
+      });
     }).catch(e => {
       console.error(e);
-      dispatch({ type: 'RECEIVE_MAKE_ORDER', error: e.toString(), orderId: 0 });
+      dispatch({
+        type: 'RECEIVE_MAKE_ORDER',
+        error: e.toString(),
+        orderId: 0
+      });
     })
   },
 
@@ -127,7 +170,7 @@ export const actionCreators = {
 };
 
 const loadCrews = (address: string, coords: number[], dispatch: any) => {
-  let request = {
+  const request = {
     source_time: getDateString(),
     addresses: [{
       address: address,
@@ -136,21 +179,29 @@ const loadCrews = (address: string, coords: number[], dispatch: any) => {
     }]
   };
   axios.post('/api/creworder/search', request).then(r => {
-    dispatch({ type: 'RECEIVE_CREWS', crewsInfo: r.data.data.crews_info, error: '' })
+    dispatch({
+      type: 'RECEIVE_CREWS',
+      crewsInfo: r.data.data.crews_info,
+      error: ''
+    })
   }).catch(e => {
     console.error(e);
-    dispatch({ type: 'RECEIVE_CREWS', crewsInfo: [], error: e.toString() })
+    dispatch({
+      type: 'RECEIVE_CREWS',
+      crewsInfo: [],
+      error: e.toString()
+    })
   })
 }
 
 const getDateString = (): string => {
-  let date = new Date();
-  let y = date.getFullYear();
-  let m = date.getMonth() + 1;
-  let d = date.getDate();
-  let h = date.getHours();
-  let min = date.getMinutes();
-  let s = date.getSeconds();
+  const date = new Date();
+  const y = date.getFullYear();
+  const m = date.getMonth() + 1;
+  const d = date.getDate();
+  const h = date.getHours();
+  const min = date.getMinutes();
+  const s = date.getSeconds();
 
   const format = (i: number): string => {
     return ((i < 10) ? '0' + i : i).toString();
